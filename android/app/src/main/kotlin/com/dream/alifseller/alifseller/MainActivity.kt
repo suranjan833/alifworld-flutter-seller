@@ -1,4 +1,4 @@
-package com.dream.alifseller.alifseller
+package com.dream.alifseller
 
 import io.flutter.embedding.android.FlutterActivity
 

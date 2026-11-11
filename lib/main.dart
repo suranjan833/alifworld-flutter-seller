@@ -1,19 +1,28 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 
 import 'app/data/services/api_service.dart';
+import 'app/data/services/env_config.dart';
 import 'app/data/theme/app_colors.dart';
 import 'app/routes/app_pages.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Enforce system Android Photo Picker (Google Play Policy compliant, no READ_MEDIA permissions needed)
+  final ImagePickerPlatform imagePickerImplementation = ImagePickerPlatform.instance;
+  if (imagePickerImplementation is ImagePickerAndroid) {
+    imagePickerImplementation.useAndroidPhotoPicker = true;
+  }
+
   await GetStorage.init();
-  // Automatically select PROD_BASE_URL on release builds (kReleaseMode), and DEBUG_BASE_URL during development
-  await Get.putAsync(() => ApiService().init(isProduction: kReleaseMode));
+  await EnvConfig.load();
+  await Get.putAsync(() => ApiService().init());
 
   runApp(
     ScreenUtilInit(

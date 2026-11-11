@@ -9,10 +9,9 @@ import 'package:get_storage/get_storage.dart';
 import '../models/announcement_model.dart';
 import '../models/dashboard_stats_model.dart';
 import '../models/analytics_dashboard_model.dart';
+import 'env_config.dart';
 
 class ApiService extends getx.GetxService {
-  static const String devBaseUrl = 'https://dev.alifworld.com.bd/api/v1/';
-  static const String prodBaseUrl = 'https://alifworld.com.bd/api/v1/';
 
   // ANSI Yellow Color for Debug Console
   static const String _yellow = '\x1B[33m';
@@ -31,9 +30,9 @@ class ApiService extends getx.GetxService {
   static const String keyIsLoggedIn = 'IS_LOGGED_IN';
   static const String keySiteConfig = 'SITE_CONFIG';
 
-  Future<ApiService> init({bool isProduction = false}) async {
+  Future<ApiService> init() async {
     storage = GetStorage();
-    final baseUrl = isProduction ? prodBaseUrl : devBaseUrl;
+    final baseUrl = EnvConfig.baseUrl;
 
     dio = Dio(
       BaseOptions(
@@ -158,20 +157,35 @@ class ApiService extends getx.GetxService {
 
   // --- 2. Auth APIs per Sellerapp.md ---
 
-  /// Request phone OTP (devCode returned on dev mode)
+  /// Request phone OTP (POST /auth/otp/request per §2.1)
   Future<Map<String, dynamic>?> requestPhoneOtp({
     required String phone,
     String purpose = 'login',
   }) async {
-    final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
-    final response = await dio.post(
-      'auth/otp/request',
-      data: {'phone': cleanPhone, 'purpose': purpose},
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return response.data is Map
-          ? (response.data['data'] as Map<String, dynamic>?)
-          : null;
+    lastApiError = null;
+    lastApiErrorCode = null;
+    try {
+      final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+      final response = await dio.post(
+        'auth/otp/request',
+        data: {'phone': cleanPhone, 'purpose': purpose},
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data is Map
+            ? (response.data['data'] as Map<String, dynamic>?)
+            : null;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        final err = (e.response?.data as Map)['error'];
+        if (err is Map) {
+          lastApiErrorCode = err['code']?.toString();
+          lastApiError = err['message']?.toString();
+        }
+      }
+      log('Request phone OTP error: $e (code: $lastApiErrorCode, message: $lastApiError)');
+    } catch (e) {
+      log('Unexpected request phone OTP error: $e');
     }
     return null;
   }
@@ -197,24 +211,88 @@ class ApiService extends getx.GetxService {
         }
       }
     } on DioException catch (e) {
-      log('Exchange OTP error: $e');
+      if (e.response?.data is Map) {
+        final err = (e.response?.data as Map)['error'];
+        if (err is Map) {
+          lastApiErrorCode = err['code']?.toString();
+          lastApiError = err['message']?.toString();
+        }
+      }
+      log('Exchange OTP error: $e (code: $lastApiErrorCode, message: $lastApiError)');
     }
     return null;
   }
 
-  /// Password login (POST /auth/token with phone and password per §3.1 and §4.1)
+  /// Password login (Supports BOTH Email and Phone Number seamlessly)
   Future<Map<String, dynamic>?> loginWithPassword({
     required String identifier,
     required String password,
   }) async {
     lastApiError = null;
     lastApiErrorCode = null;
+
+    final trimmed = identifier.trim();
+    final isEmail = trimmed.contains('@');
+
+    String phoneToUse = trimmed;
+
     try {
-      final cleanPhone = identifier.replaceAll(RegExp(r'\D'), '');
+      // 1. If it's an email, resolve the registered phone number via auth/login first (§3)
+      if (isEmail) {
+        try {
+          final loginRes = await dio.post(
+            'auth/login',
+            data: {
+              'identifier': trimmed.toLowerCase(),
+              'password': password,
+            },
+          );
+          if (loginRes.statusCode == 200 || loginRes.statusCode == 201) {
+            final resData = loginRes.data;
+            final userData = (resData is Map && resData['data'] is Map && resData['data']['user'] is Map)
+                ? (resData['data']['user'] as Map<String, dynamic>)
+                : (resData is Map && resData['user'] is Map)
+                    ? (resData['user'] as Map<String, dynamic>)
+                    : null;
+            final resolvedPhone = userData?['phone']?.toString();
+            if (resolvedPhone != null && resolvedPhone.isNotEmpty) {
+              phoneToUse = resolvedPhone;
+            } else {
+              lastApiErrorCode = 'USER_NOT_FOUND';
+              lastApiError = 'No phone number associated with this email. Please log in using your phone number.';
+              return null;
+            }
+          }
+        } on DioException catch (e) {
+          if (e.response?.data is Map) {
+            final err = (e.response?.data as Map)['error'];
+            if (err is Map) {
+              lastApiErrorCode = err['code']?.toString();
+              lastApiError = err['message']?.toString();
+            }
+          }
+          log('Email auth/login error: $e (code: $lastApiErrorCode, message: $lastApiError)');
+          return null;
+        }
+      }
+
+      // 2. Clean phone digits
+      final cleanPhone = phoneToUse.replaceAll(RegExp(r'\D'), '');
+      if (cleanPhone.isEmpty) {
+        lastApiErrorCode = 'VALIDATION_ERROR';
+        lastApiError = 'A valid phone number is required to log in.';
+        return null;
+      }
+
+      // 3. Obtain mobile JWT Access & Refresh tokens via auth/token (§1.1)
       final response = await dio.post(
         'auth/token',
-        data: {'phone': cleanPhone, 'password': password},
+        data: {
+          'phone': cleanPhone,
+          'password': password,
+        },
       );
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data?['data'] as Map<String, dynamic>?;
         if (data != null && data['accessToken'] != null) {
@@ -223,7 +301,16 @@ class ApiService extends getx.GetxService {
         }
       }
     } on DioException catch (e) {
-      log('Login error: $e');
+      if (e.response?.data is Map) {
+        final err = (e.response?.data as Map)['error'];
+        if (err is Map) {
+          lastApiErrorCode = err['code']?.toString();
+          lastApiError = err['message']?.toString();
+        }
+      }
+      log('Login token error: $e (code: $lastApiErrorCode, message: $lastApiError)');
+    } catch (e) {
+      log('Unexpected login error: $e');
     }
     return null;
   }
@@ -314,6 +401,13 @@ class ApiService extends getx.GetxService {
             : null;
       }
     } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        final err = (e.response?.data as Map)['error'];
+        if (err is Map) {
+          lastApiErrorCode = err['code']?.toString();
+          lastApiError = err['message']?.toString();
+        }
+      }
       log('Verify phone OTP error: $e');
     }
     return null;
@@ -334,6 +428,13 @@ class ApiService extends getx.GetxService {
             : null;
       }
     } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        final err = (e.response?.data as Map)['error'];
+        if (err is Map) {
+          lastApiErrorCode = err['code']?.toString();
+          lastApiError = err['message']?.toString();
+        }
+      }
       log('Request email OTP error: $e');
     }
     return null;
@@ -357,6 +458,13 @@ class ApiService extends getx.GetxService {
             : null;
       }
     } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        final err = (e.response?.data as Map)['error'];
+        if (err is Map) {
+          lastApiErrorCode = err['code']?.toString();
+          lastApiError = err['message']?.toString();
+        }
+      }
       log('Verify email OTP error: $e');
     }
     return null;
@@ -398,6 +506,13 @@ class ApiService extends getx.GetxService {
             : null;
       }
     } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        final err = (e.response?.data as Map)['error'];
+        if (err is Map) {
+          lastApiErrorCode = err['code']?.toString();
+          lastApiError = err['message']?.toString();
+        }
+      }
       log('Complete registration error: $e');
     }
     return null;
@@ -420,11 +535,54 @@ class ApiService extends getx.GetxService {
     return null;
   }
 
-  /// Logout (POST /auth/logout)
-  Future<void> logout() async {
+  /// Reset Password via Phone OTP (POST /auth/password/reset per §3.1)
+  Future<bool> resetPassword({
+    required String phone,
+    required String code,
+    required String newPassword,
+  }) async {
+    lastApiError = null;
+    lastApiErrorCode = null;
     try {
-      await dio.post('auth/logout');
-    } catch (_) {}
+      final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+      final response = await dio.post(
+        'auth/password/reset',
+        data: {
+          'phone': cleanPhone,
+          'code': code.trim(),
+          'newPassword': newPassword,
+        },
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data?['data']?['ok'] == true ||
+            response.data?['ok'] == true;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        final err = (e.response?.data as Map)['error'];
+        if (err is Map) {
+          lastApiErrorCode = err['code']?.toString();
+          lastApiError = err['message']?.toString();
+        }
+      }
+      log('Reset password error: $e (code: $lastApiErrorCode, message: $lastApiError)');
+    } catch (e) {
+      log('Unexpected reset password error: $e');
+    }
+    return false;
+  }
+
+  /// Explicit Logout (POST /auth/revoke per §1.3)
+  Future<void> logout() async {
+    final currentRefresh = storage.read<String>(keyRefreshToken);
+    if (currentRefresh != null && currentRefresh.isNotEmpty) {
+      try {
+        await dio.post(
+          'auth/revoke',
+          data: {'refreshToken': currentRefresh},
+        );
+      } catch (_) {}
+    }
     storage.remove(keyAccessToken);
     storage.remove(keyRefreshToken);
     storage.remove(keyUserData);

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../../data/services/env_config.dart';
 import '../../../data/theme/app_colors.dart';
 import '../../../data/widgets/shimmer_widget.dart';
 import '../controllers/home_controller.dart';
@@ -218,7 +219,7 @@ class ProfileView extends GetView<ProfileViewController> {
   // Header / Public Link Pill
   // ==========================================
   Widget _buildPublicShopHeader(String slug) {
-    final publicUrl = 'https://dev.alifworld.com.bd/shop/$slug';
+    final publicUrl = '${EnvConfig.siteUrl}/shop/$slug';
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -662,7 +663,7 @@ class ProfileView extends GetView<ProfileViewController> {
                     _buildTextField(
                       controller: profileCtrl.canonicalUrlController,
                       label: 'Canonical URL',
-                      hint: 'https://alifworld.com.bd/shop/...',
+                      hint: '${EnvConfig.siteUrl}/shop/...',
                       prefixIcon: Iconsax.link_21,
                     ),
                     SizedBox(height: 12.h),

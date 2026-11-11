@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Brand Colors matching alifworld.com.bd
+  // Brand Colors
   static const Color primary = Color(0xFFFF630F);
   static const Color primaryLight = Color(0xFFFFF2EB);
   static const Color primaryDark = Color(0xFFE05206);

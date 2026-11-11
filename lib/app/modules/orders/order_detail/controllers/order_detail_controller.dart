@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../data/services/api_service.dart';
+import '../../../../data/services/env_config.dart';
 import '../../../../data/theme/app_colors.dart';
 import '../widgets/delivery_otp_dialog.dart';
 import '../widgets/reject_order_dialog.dart';
@@ -246,7 +247,7 @@ class OrderDetailController extends GetxController {
         performStatusChange(
           status: 'delivered',
           otpCode: otp,
-          photoUrl: 'https://cdn.alifworld.com.bd/delivery/handover-confirmed.jpg',
+          photoUrl: '${EnvConfig.cdnUrl}/delivery/handover-confirmed.jpg',
           successMessage: 'Order delivered successfully',
         );
       },

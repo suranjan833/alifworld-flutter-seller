@@ -1,6 +1,9 @@
 import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../data/services/api_service.dart';
 import '../../../routes/app_pages.dart';
 
@@ -48,6 +51,17 @@ class SellerGateController extends GetxController {
   // Token storage
   String? regToken;
   String? emailToken;
+
+  // --- Forgot / Reset Password State (§3.1) ---
+  final forgotPhoneController = TextEditingController();
+  final forgotOtpController = TextEditingController();
+  final forgotNewPasswordController = TextEditingController();
+  final forgotConfirmPasswordController = TextEditingController();
+  final isForgotOtpSent = false.obs;
+  final forgotCountdown = 0.obs;
+  final isForgotLoading = false.obs;
+  final isForgotNewPasswordVisible = false.obs;
+  Timer? _forgotTimer;
 
   // Marquee ticker
   final marqueeScrollController = ScrollController();
@@ -100,10 +114,15 @@ class SellerGateController extends GetxController {
   }
 
   void _onPhoneChanged() {
-    final currentPhone = phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+    final currentPhone = phoneController.text.trim().replaceAll(
+      RegExp(r'\D'),
+      '',
+    );
 
     // If OTP was already sent previously and user changes/edits the phone number:
-    if (isPhoneOtpSent.value && lastOtpSentPhone.isNotEmpty && currentPhone != lastOtpSentPhone) {
+    if (isPhoneOtpSent.value &&
+        lastOtpSentPhone.isNotEmpty &&
+        currentPhone != lastOtpSentPhone) {
       // Clear old verification code immediately since phone changed
       phoneOtpController.clear();
       _phoneChangeDebounce?.cancel();
@@ -111,8 +130,13 @@ class SellerGateController extends GetxController {
       // Automatically trigger OTP resend once user enters a full valid number (10 or 11 digits)
       if (currentPhone.length >= 10 && currentPhone.length <= 11) {
         _phoneChangeDebounce = Timer(const Duration(milliseconds: 650), () {
-          final phoneNow = phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
-          if (phoneNow.length >= 10 && phoneNow.length <= 11 && phoneNow != lastOtpSentPhone) {
+          final phoneNow = phoneController.text.trim().replaceAll(
+            RegExp(r'\D'),
+            '',
+          );
+          if (phoneNow.length >= 10 &&
+              phoneNow.length <= 11 &&
+              phoneNow != lastOtpSentPhone) {
             requestPhoneOtp(isAutoResend: true);
           }
         });
@@ -140,6 +164,52 @@ class SellerGateController extends GetxController {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
 
+  String _mapAuthErrorMessage(String? code, String? fallback) {
+    switch (code) {
+      case 'INVALID_CREDENTIALS':
+        return 'Invalid email/phone or password. Please verify and try again.';
+      case 'OTP_INVALID':
+        return 'Incorrect verification code. Please check the code and try again.';
+      case 'OTP_NOT_FOUND':
+        return 'Verification code expired or not found. Please request a new code.';
+      case 'OTP_LOCKED':
+        return 'Too many incorrect attempts. Please wait 10 minutes and request a new code.';
+      case 'USER_NOT_FOUND':
+        return 'No account found with this phone number.';
+      case 'USER_SUSPENDED':
+        return 'Your merchant account has been suspended. Please contact support.';
+      case 'USER_BLOCKED':
+        return 'Your merchant account has been blocked. Please contact support.';
+      case 'RATE_LIMITED':
+        return 'Too many login attempts. Please wait a minute before trying again.';
+      case 'VALIDATION_ERROR':
+        return fallback ?? 'Invalid input data. Please check and try again.';
+      default:
+        return fallback ?? 'Could not complete login. Please try again.';
+    }
+  }
+
+  Future<void> _handlePostLoginLanding() async {
+    try {
+      final statusRes = await _api.getOnboardingStatus();
+      final seller = statusRes?['seller'] as Map<String, dynamic>?;
+      if (seller == null) {
+        Get.offAllNamed(Routes.STORE_SETUP);
+      } else {
+        final status = seller['status']?.toString().toLowerCase();
+        if (status == 'approved') {
+          Get.offAllNamed(Routes.HOME);
+        } else if (status == 'pending') {
+          Get.offAllNamed(Routes.ONBOARDING_PENDING);
+        } else {
+          Get.offAllNamed(Routes.STORE_SETUP);
+        }
+      }
+    } catch (_) {
+      Get.offAllNamed(Routes.STORE_SETUP);
+    }
+  }
+
   // --- Log In Logic ---
   void login() async {
     final account = loginAccountController.text.trim();
@@ -156,27 +226,30 @@ class SellerGateController extends GetxController {
       return;
     }
 
-    if (account.contains('@')) {
-      Get.snackbar(
-        'Mobile Number Required',
-        'Please enter your registered mobile phone number to sign in (per §4.1).',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    final digits = account.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 10 || digits.length > 11) {
-      Get.snackbar(
-        'Invalid Phone Number',
-        'Phone number must be between 10 and 11 digits',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
-      return;
+    final isEmail = account.contains('@');
+    if (isEmail) {
+      if (!GetUtils.isEmail(account)) {
+        Get.snackbar(
+          'Invalid Email',
+          'Please enter a valid email address',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+        return;
+      }
+    } else {
+      final digits = account.replaceAll(RegExp(r'\D'), '');
+      if (digits.length < 10 || digits.length > 15) {
+        Get.snackbar(
+          'Invalid Phone Number',
+          'Phone number must be between 10 and 15 digits',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+        return;
+      }
     }
 
     if (password.isEmpty) {
@@ -192,11 +265,14 @@ class SellerGateController extends GetxController {
 
     isLoading.value = true;
     try {
-      final res = await _api.loginWithPassword(identifier: account, password: password);
+      final res = await _api.loginWithPassword(
+        identifier: account,
+        password: password,
+      );
       isLoading.value = false;
 
       if (res != null && res['accessToken'] != null) {
-        final profile = await _api.getProfile();
+        await _api.getProfile();
         Get.snackbar(
           'Login Successful',
           'Welcome back to Alif Seller Partner Portal',
@@ -205,17 +281,13 @@ class SellerGateController extends GetxController {
           colorText: Colors.white,
         );
 
-        // Routing rule per Sellerapp.md §2.4:
-        final status = profile?['sellerStatus']?.toString().toLowerCase();
-        if (status == 'approved') {
-          Get.offAllNamed(Routes.HOME);
-        } else if (status == 'pending') {
-          Get.offAllNamed(Routes.ONBOARDING_PENDING);
-        } else {
-          Get.offAllNamed(Routes.STORE_SETUP);
-        }
+        // Routing rule per §5:
+        await _handlePostLoginLanding();
       } else {
-        final errorMsg = _api.lastApiError ?? 'Invalid credentials. Please verify your phone and password.';
+        final errorMsg = _mapAuthErrorMessage(
+          _api.lastApiErrorCode,
+          _api.lastApiError,
+        );
         Get.snackbar(
           'Login Failed',
           errorMsg,
@@ -226,7 +298,10 @@ class SellerGateController extends GetxController {
       }
     } catch (e) {
       isLoading.value = false;
-      final errorMsg = _api.lastApiError ?? 'Could not complete login. Please try again.';
+      final errorMsg = _mapAuthErrorMessage(
+        _api.lastApiErrorCode,
+        _api.lastApiError,
+      );
       Get.snackbar(
         'Login Error',
         errorMsg,
@@ -273,21 +348,22 @@ class SellerGateController extends GetxController {
 
       _startPhoneResendTimer();
 
-      // Automatically add devCode if returned by backend (e.g. {ok: true, devCode: 157866})
+      // Automatically add devCode only in dev/debug mode (§2.1: never in production)
       final devCode = res?['devCode']?.toString();
-      if (devCode != null && devCode.isNotEmpty) {
+      if (kDebugMode && devCode != null && devCode.isNotEmpty) {
         phoneOtpController.text = devCode;
       }
 
+      final showDevCode = kDebugMode && devCode != null && devCode.isNotEmpty;
       Get.snackbar(
         isAutoResend ? 'Number Updated & OTP Sent' : 'OTP Sent',
         isAutoResend
-            ? (devCode != null
-                ? 'Phone updated! Code ($devCode) auto-added.'
-                : 'Phone updated! New verification code sent to +880 $phone.')
-            : (devCode != null
-                ? 'Code ($devCode) auto-added.'
-                : 'A 6-digit verification code was sent to +880 $phone via SMS.'),
+            ? (showDevCode
+                  ? 'Phone updated! Code ($devCode) auto-added.'
+                  : 'Phone updated! New verification code sent to +880 $phone.')
+            : (showDevCode
+                  ? 'Code ($devCode) auto-added.'
+                  : 'A 6-digit verification code was sent to +880 $phone via SMS.'),
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
@@ -296,7 +372,10 @@ class SellerGateController extends GetxController {
     } catch (e) {
       isLoading.value = false;
       isAutoResendingPhoneOtp.value = false;
-      final errorMsg = _api.lastApiError ?? 'Failed to request verification code. Please try again.';
+      final errorMsg = _mapAuthErrorMessage(
+        _api.lastApiErrorCode,
+        _api.lastApiError ?? 'Failed to request verification code. Please try again.',
+      );
       Get.snackbar(
         'Error',
         errorMsg,
@@ -356,7 +435,7 @@ class SellerGateController extends GetxController {
 
       if (isLoginMode.value) {
         if (res != null && res['accessToken'] != null) {
-          final profile = await _api.getProfile();
+          await _api.getProfile();
           Get.snackbar(
             'Login Verified',
             'Successfully logged in to Alif Seller.',
@@ -365,17 +444,28 @@ class SellerGateController extends GetxController {
             colorText: Colors.white,
           );
 
-          // Routing rule per Sellerapp.md §2.4:
-          final status = profile?['sellerStatus']?.toString().toLowerCase();
-          if (status == 'approved') {
-            Get.offAllNamed(Routes.HOME);
-          } else if (status == 'pending') {
-            Get.offAllNamed(Routes.ONBOARDING_PENDING);
-          } else {
-            Get.offAllNamed(Routes.STORE_SETUP);
-          }
+          // Routing rule per §5:
+          await _handlePostLoginLanding();
         } else {
-          final errorMsg = _api.lastApiError ?? 'The verification code is incorrect.';
+          // If phone is not registered, branch to registration per §1.1
+          if (_api.lastApiErrorCode == 'USER_NOT_FOUND') {
+            Get.snackbar(
+              'No Account Found',
+              'No merchant account found for this phone number. Redirecting to registration...',
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Colors.orangeAccent,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 4),
+            );
+            isLoginMode.value = false;
+            gateStep.value = 1;
+            return;
+          }
+
+          final errorMsg = _mapAuthErrorMessage(
+            _api.lastApiErrorCode,
+            _api.lastApiError ?? 'The verification code is incorrect.',
+          );
           Get.snackbar(
             'Verification Failed',
             errorMsg,
@@ -397,7 +487,10 @@ class SellerGateController extends GetxController {
             colorText: Colors.white,
           );
         } else {
-          final errorMsg = _api.lastApiError ?? 'The verification code is incorrect.';
+          final errorMsg = _mapAuthErrorMessage(
+            _api.lastApiErrorCode,
+            _api.lastApiError ?? 'The verification code is incorrect.',
+          );
           Get.snackbar(
             'Verification Failed',
             errorMsg,
@@ -409,7 +502,10 @@ class SellerGateController extends GetxController {
       }
     } catch (e) {
       isLoading.value = false;
-      final errorMsg = _api.lastApiError ?? 'The verification code is incorrect.';
+      final errorMsg = _mapAuthErrorMessage(
+        _api.lastApiErrorCode,
+        _api.lastApiError ?? 'The verification code is incorrect.',
+      );
       Get.snackbar(
         'Verification Failed',
         errorMsg,
@@ -442,15 +538,16 @@ class SellerGateController extends GetxController {
 
       _startEmailResendTimer();
 
-      // Automatically add devCode if returned by backend (e.g. {ok: true, devCode: 157866})
+      // Automatically add devCode only in dev/debug mode
       final devCode = res?['devCode']?.toString();
-      if (devCode != null && devCode.isNotEmpty) {
+      if (kDebugMode && devCode != null && devCode.isNotEmpty) {
         emailOtpController.text = devCode;
       }
 
+      final showDevCode = kDebugMode && devCode != null && devCode.isNotEmpty;
       Get.snackbar(
         'OTP Sent',
-        devCode != null
+        showDevCode
             ? 'Code ($devCode) auto-added.'
             : 'A 6-digit verification code was sent to $email.',
         snackPosition: SnackPosition.TOP,
@@ -459,7 +556,10 @@ class SellerGateController extends GetxController {
       );
     } catch (e) {
       isLoading.value = false;
-      final errorMsg = _api.lastApiError ?? 'Failed to send email verification code.';
+      final errorMsg = _mapAuthErrorMessage(
+        _api.lastApiErrorCode,
+        _api.lastApiError ?? 'Failed to send email verification code.',
+      );
       Get.snackbar(
         'Error',
         errorMsg,
@@ -514,7 +614,8 @@ class SellerGateController extends GetxController {
           colorText: Colors.white,
         );
       } else {
-        final errorMsg = _api.lastApiError ?? 'The verification code is incorrect.';
+        final errorMsg =
+            _api.lastApiError ?? 'The verification code is incorrect.';
         Get.snackbar(
           'Verification Failed',
           errorMsg,
@@ -525,7 +626,8 @@ class SellerGateController extends GetxController {
       }
     } catch (e) {
       isLoading.value = false;
-      final errorMsg = _api.lastApiError ?? 'The verification code is incorrect.';
+      final errorMsg =
+          _api.lastApiError ?? 'The verification code is incorrect.';
       Get.snackbar(
         'Verification Failed',
         errorMsg,
@@ -613,7 +715,7 @@ class SellerGateController extends GetxController {
         isLoading.value = false;
 
         if (tokenRes != null && tokenRes['accessToken'] != null) {
-          final profile = await _api.getProfile();
+          await _api.getProfile();
           Get.snackbar(
             'Registration Successful',
             'Account created! Let\'s setup your store.',
@@ -622,15 +724,8 @@ class SellerGateController extends GetxController {
             colorText: Colors.white,
           );
 
-          // Routing per §1.2:
-          final status = profile?['sellerStatus']?.toString().toLowerCase();
-          if (status == 'approved') {
-            Get.offAllNamed(Routes.HOME);
-          } else if (status == 'pending') {
-            Get.offAllNamed(Routes.ONBOARDING_PENDING);
-          } else {
-            Get.offAllNamed(Routes.STORE_SETUP);
-          }
+          // Routing per §5:
+          await _handlePostLoginLanding();
         } else {
           Get.snackbar(
             'Account Created',
@@ -698,6 +793,174 @@ class SellerGateController extends GetxController {
     }
   }
 
+  // --- Forgot / Reset Password Logic (§3.1) ---
+  void _startForgotCountdown() {
+    forgotCountdown.value = 60;
+    _forgotTimer?.cancel();
+    _forgotTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (forgotCountdown.value > 0) {
+        forgotCountdown.value--;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  void requestForgotOtp() async {
+    final phone = forgotPhoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (phone.length < 10 || phone.length > 15) {
+      Get.snackbar(
+        'Invalid Phone Number',
+        'Please enter a valid phone number (between 10 and 15 digits)',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    isForgotLoading.value = true;
+    try {
+      final res = await _api.requestPhoneOtp(
+        phone: phone,
+        purpose: 'reset',
+      );
+      isForgotLoading.value = false;
+
+      if (res != null || _api.lastApiErrorCode == null) {
+        isForgotOtpSent.value = true;
+        _startForgotCountdown();
+
+        final devCode = res?['devCode']?.toString();
+        if (kDebugMode && devCode != null && devCode.isNotEmpty) {
+          forgotOtpController.text = devCode;
+        }
+
+        final showDev = kDebugMode && devCode != null && devCode.isNotEmpty;
+        Get.snackbar(
+          'Reset Code Sent',
+          showDev
+              ? 'Code ($devCode) auto-added.'
+              : 'Password reset code sent to +880 $phone via SMS.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        final errorMsg = _mapAuthErrorMessage(
+          _api.lastApiErrorCode,
+          _api.lastApiError ?? 'Failed to send reset code.',
+        );
+        Get.snackbar(
+          'Error',
+          errorMsg,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isForgotLoading.value = false;
+      Get.snackbar(
+        'Error',
+        'Could not send reset code. Please try again.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void submitResetPassword() async {
+    final phone = forgotPhoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+    final code = forgotOtpController.text.trim();
+    final newPass = forgotNewPasswordController.text;
+    final confirmPass = forgotConfirmPasswordController.text;
+
+    if (code.length < 4) {
+      Get.snackbar(
+        'Invalid Code',
+        'Please enter the 6-digit reset code sent to your phone',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (newPass.length < 8 || newPass.length > 128) {
+      Get.snackbar(
+        'Invalid Password',
+        'Password must be between 8 and 128 characters',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (newPass != confirmPass) {
+      Get.snackbar(
+        'Password Mismatch',
+        'New password and confirm password do not match',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    isForgotLoading.value = true;
+    try {
+      final ok = await _api.resetPassword(
+        phone: phone,
+        code: code,
+        newPassword: newPass,
+      );
+      isForgotLoading.value = false;
+
+      if (ok) {
+        if (Get.isBottomSheetOpen ?? false) {
+          Get.back();
+        }
+        loginAccountController.text = phone;
+        loginPasswordController.text = newPass;
+        isLoginMode.value = true;
+        isOtpLogin.value = false;
+
+        Get.snackbar(
+          'Password Reset Successful',
+          'Your password has been changed. You can now log in.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+      } else {
+        final errorMsg = _mapAuthErrorMessage(
+          _api.lastApiErrorCode,
+          _api.lastApiError ?? 'Password reset failed. Please check the code.',
+        );
+        Get.snackbar(
+          'Reset Failed',
+          errorMsg,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isForgotLoading.value = false;
+      Get.snackbar(
+        'Error',
+        'Could not reset password. Please try again.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   @override
   void onClose() {
     _isMarqueeScrolling = false;
@@ -706,6 +969,7 @@ class SellerGateController extends GetxController {
     _phoneChangeDebounce?.cancel();
     _phoneTimer?.cancel();
     _emailTimer?.cancel();
+    _forgotTimer?.cancel();
     loginAccountController.dispose();
     loginPasswordController.dispose();
     phoneController.dispose();
@@ -716,6 +980,10 @@ class SellerGateController extends GetxController {
     lastNameController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
+    forgotPhoneController.dispose();
+    forgotOtpController.dispose();
+    forgotNewPasswordController.dispose();
+    forgotConfirmPasswordController.dispose();
     super.onClose();
   }
 }

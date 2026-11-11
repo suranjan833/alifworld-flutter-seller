@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../data/services/env_config.dart';
 import '../../../data/theme/app_colors.dart';
 import '../../../data/widgets/common_widgets.dart';
 import '../../../data/widgets/exit_dialog.dart';
@@ -190,7 +191,7 @@ class OnboardingPendingView extends GetView<OnboardingPendingController> {
                 onPressed: () {
                   Get.snackbar(
                     'Support Hotline',
-                    'Alifworld Seller Support: support@alifworld.com.bd | +880 9612 000 000',
+                    'Alifworld Seller Support: ${EnvConfig.supportEmail} | ${EnvConfig.supportPhone}',
                     snackPosition: SnackPosition.TOP,
                   );
                 },

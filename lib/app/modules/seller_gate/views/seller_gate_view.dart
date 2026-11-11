@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+
 import '../../../data/theme/app_colors.dart';
 import '../../../data/widgets/common_widgets.dart';
 import '../../../data/widgets/exit_dialog.dart';
@@ -51,9 +52,11 @@ class SellerGateView extends GetView<SellerGateController> {
                 SizedBox(height: 16.h),
 
                 // Main Auth Card (Login as default, or Sign Up)
-                Obx(() => controller.isLoginMode.value
-                    ? _buildLoginCard(context)
-                    : _buildSignUpCard(context)),
+                Obx(
+                  () => controller.isLoginMode.value
+                      ? _buildLoginCard(context)
+                      : _buildSignUpCard(context),
+                ),
                 SizedBox(height: 16.h),
 
                 // Quick Benefits / Perks Bar
@@ -75,7 +78,11 @@ class SellerGateView extends GetView<SellerGateController> {
       centerTitle: false,
       titleSpacing: 0,
       leading: IconButton(
-        icon: Icon(Iconsax.arrow_left_2, color: AppColors.textPrimary, size: 20.sp),
+        icon: Icon(
+          Iconsax.arrow_left_2,
+          color: AppColors.textPrimary,
+          size: 20.sp,
+        ),
         onPressed: () => _handleBack(context),
       ),
       title: Row(
@@ -100,7 +107,9 @@ class SellerGateView extends GetView<SellerGateController> {
             decoration: BoxDecoration(
               color: AppColors.primaryLight,
               borderRadius: BorderRadius.circular(4.r),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+              ),
             ),
             child: Text(
               'SELLER',
@@ -130,7 +139,11 @@ class SellerGateView extends GetView<SellerGateController> {
         ),
         IconButton(
           onPressed: () => _showBenefitsBottomSheet(context),
-          icon: Icon(Iconsax.info_circle, size: 20.sp, color: AppColors.textSecondary),
+          icon: Icon(
+            Iconsax.info_circle,
+            size: 20.sp,
+            color: AppColors.textSecondary,
+          ),
         ),
         SizedBox(width: 4.w),
       ],
@@ -213,7 +226,10 @@ class SellerGateView extends GetView<SellerGateController> {
             speed: 36.0,
             spacing: 8.w,
             children: [
-              _buildHeroMiniBadge(Iconsax.empty_wallet_tick, '0% First 30 Days'),
+              _buildHeroMiniBadge(
+                Iconsax.empty_wallet_tick,
+                '0% First 30 Days',
+              ),
               _buildHeroMiniBadge(Iconsax.truck_fast, '64 Districts Pickup'),
               _buildHeroMiniBadge(Iconsax.card_tick, 'Automated Bank Payout'),
               _buildHeroMiniBadge(Iconsax.headphone, '24/7 Dedicated Support'),
@@ -326,10 +342,17 @@ class SellerGateView extends GetView<SellerGateController> {
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: 7.h),
                         decoration: BoxDecoration(
-                          color: !controller.isOtpLogin.value ? Colors.white : Colors.transparent,
+                          color: !controller.isOtpLogin.value
+                              ? Colors.white
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8.r),
                           boxShadow: !controller.isOtpLogin.value
-                              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 4,
+                                  ),
+                                ]
                               : null,
                         ),
                         child: Center(
@@ -337,8 +360,12 @@ class SellerGateView extends GetView<SellerGateController> {
                             'Password Login',
                             style: GoogleFonts.inter(
                               fontSize: 12.sp,
-                              fontWeight: !controller.isOtpLogin.value ? FontWeight.w700 : FontWeight.w500,
-                              color: !controller.isOtpLogin.value ? AppColors.primary : AppColors.textSecondary,
+                              fontWeight: !controller.isOtpLogin.value
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: !controller.isOtpLogin.value
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -352,10 +379,17 @@ class SellerGateView extends GetView<SellerGateController> {
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: 7.h),
                         decoration: BoxDecoration(
-                          color: controller.isOtpLogin.value ? Colors.white : Colors.transparent,
+                          color: controller.isOtpLogin.value
+                              ? Colors.white
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8.r),
                           boxShadow: controller.isOtpLogin.value
-                              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 4,
+                                  ),
+                                ]
                               : null,
                         ),
                         child: Center(
@@ -363,8 +397,12 @@ class SellerGateView extends GetView<SellerGateController> {
                             'Number OTP Login',
                             style: GoogleFonts.inter(
                               fontSize: 12.sp,
-                              fontWeight: controller.isOtpLogin.value ? FontWeight.w700 : FontWeight.w500,
-                              color: controller.isOtpLogin.value ? AppColors.primary : AppColors.textSecondary,
+                              fontWeight: controller.isOtpLogin.value
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: controller.isOtpLogin.value
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -390,7 +428,11 @@ class SellerGateView extends GetView<SellerGateController> {
                         controller: controller.loginAccountController,
                         keyboardType: TextInputType.emailAddress,
                         isRequired: true,
-                        prefixIcon: Icon(Iconsax.user, color: AppColors.primary, size: 20.sp),
+                        prefixIcon: Icon(
+                          Iconsax.user,
+                          color: AppColors.primary,
+                          size: 20.sp,
+                        ),
                       ),
                       SizedBox(height: 12.h),
 
@@ -401,10 +443,16 @@ class SellerGateView extends GetView<SellerGateController> {
                           controller: controller.loginPasswordController,
                           obscureText: !controller.isLoginPasswordVisible.value,
                           isRequired: true,
-                          prefixIcon: Icon(Iconsax.lock, color: AppColors.textMuted, size: 20.sp),
+                          prefixIcon: Icon(
+                            Iconsax.lock,
+                            color: AppColors.textMuted,
+                            size: 20.sp,
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              controller.isLoginPasswordVisible.value ? Iconsax.eye : Iconsax.eye_slash,
+                              controller.isLoginPasswordVisible.value
+                                  ? Iconsax.eye
+                                  : Iconsax.eye_slash,
                               color: AppColors.textMuted,
                               size: 18.sp,
                             ),
@@ -430,10 +478,14 @@ class SellerGateView extends GetView<SellerGateController> {
                                     height: 22.w,
                                     child: Checkbox(
                                       value: controller.rememberMe.value,
-                                      onChanged: (v) => controller.rememberMe.value = v ?? true,
+                                      onChanged: (v) =>
+                                          controller.rememberMe.value =
+                                              v ?? true,
                                       activeColor: AppColors.primary,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(4.r),
+                                        borderRadius: BorderRadius.circular(
+                                          4.r,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -450,15 +502,7 @@ class SellerGateView extends GetView<SellerGateController> {
                             ),
                           ),
                           TextButton(
-                            onPressed: () {
-                              Get.snackbar(
-                                'Password Recovery',
-                                'A password reset link will be sent to your registered contact.',
-                                snackPosition: SnackPosition.TOP,
-                                backgroundColor: AppColors.primary,
-                                colorText: Colors.white,
-                              );
-                            },
+                            onPressed: () => _showForgotPasswordSheet(context),
                             child: Text(
                               'Forgot Password?',
                               style: GoogleFonts.inter(
@@ -651,15 +695,15 @@ class SellerGateView extends GetView<SellerGateController> {
           color: isActive
               ? AppColors.primaryLight
               : isDone
-                  ? AppColors.successLight
-                  : const Color(0xFFF8FAFC),
+              ? AppColors.successLight
+              : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(10.r),
           border: Border.all(
             color: isActive
                 ? AppColors.primary.withValues(alpha: 0.5)
                 : isDone
-                    ? AppColors.success.withValues(alpha: 0.4)
-                    : AppColors.border,
+                ? AppColors.success.withValues(alpha: 0.4)
+                : AppColors.border,
             width: 1.w,
           ),
         ),
@@ -671,8 +715,8 @@ class SellerGateView extends GetView<SellerGateController> {
               color: isActive
                   ? AppColors.primary
                   : isDone
-                      ? AppColors.success
-                      : AppColors.textMuted,
+                  ? AppColors.success
+                  : AppColors.textMuted,
             ),
             SizedBox(height: 3.h),
             Text(
@@ -683,8 +727,8 @@ class SellerGateView extends GetView<SellerGateController> {
                 color: isActive
                     ? AppColors.primary
                     : isDone
-                        ? AppColors.success
-                        : AppColors.textMuted,
+                    ? AppColors.success
+                    : AppColors.textMuted,
               ),
             ),
           ],
@@ -730,8 +774,8 @@ class SellerGateView extends GetView<SellerGateController> {
             helperText: controller.isAutoResendingPhoneOtp.value
                 ? 'Resending OTP to new number...'
                 : (controller.isPhoneOtpSent.value
-                    ? 'Editing number will automatically resend OTP'
-                    : 'Minimum 10 digits, maximum 11 digits'),
+                      ? 'Editing number will automatically resend OTP'
+                      : 'Minimum 10 digits, maximum 11 digits'),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return 'Phone number is required';
@@ -759,7 +803,11 @@ class SellerGateView extends GetView<SellerGateController> {
                     ),
                   ),
                   SizedBox(width: 6.w),
-                  Container(width: 1.w, height: 16.h, color: AppColors.borderStrong),
+                  Container(
+                    width: 1.w,
+                    height: 16.h,
+                    color: AppColors.borderStrong,
+                  ),
                 ],
               ),
             ),
@@ -779,11 +827,15 @@ class SellerGateView extends GetView<SellerGateController> {
                     ),
                   )
                 : (controller.isPhoneOtpSent.value
-                    ? Tooltip(
-                        message: 'Phone number verified / active for OTP',
-                        child: Icon(Iconsax.edit_2, color: AppColors.primary, size: 18.sp),
-                      )
-                    : null),
+                      ? Tooltip(
+                          message: 'Phone number verified / active for OTP',
+                          child: Icon(
+                            Iconsax.edit_2,
+                            color: AppColors.primary,
+                            size: 18.sp,
+                          ),
+                        )
+                      : null),
           ),
         ),
         SizedBox(height: 12.h),
@@ -804,7 +856,11 @@ class SellerGateView extends GetView<SellerGateController> {
                       controller: controller.phoneOtpController,
                       keyboardType: TextInputType.number,
                       isRequired: true,
-                      prefixIcon: Icon(Iconsax.key, color: AppColors.primary, size: 20.sp),
+                      prefixIcon: Icon(
+                        Iconsax.key,
+                        color: AppColors.primary,
+                        size: 20.sp,
+                      ),
                       suffixIcon: controller.phoneResendCountdown.value > 0
                           ? Padding(
                               padding: EdgeInsets.all(12.w),
@@ -891,7 +947,11 @@ class SellerGateView extends GetView<SellerGateController> {
                       controller: controller.emailOtpController,
                       keyboardType: TextInputType.number,
                       isRequired: true,
-                      prefixIcon: Icon(Iconsax.key, color: AppColors.primary, size: 20.sp),
+                      prefixIcon: Icon(
+                        Iconsax.key,
+                        color: AppColors.primary,
+                        size: 20.sp,
+                      ),
                       suffixIcon: controller.emailResendCountdown.value > 0
                           ? Padding(
                               padding: EdgeInsets.all(12.w),
@@ -982,10 +1042,16 @@ class SellerGateView extends GetView<SellerGateController> {
             controller: controller.passwordController,
             obscureText: !controller.isPasswordVisible.value,
             isRequired: true,
-            prefixIcon: Icon(Iconsax.lock, color: AppColors.textMuted, size: 20.sp),
+            prefixIcon: Icon(
+              Iconsax.lock,
+              color: AppColors.textMuted,
+              size: 20.sp,
+            ),
             suffixIcon: IconButton(
               icon: Icon(
-                controller.isPasswordVisible.value ? Iconsax.eye : Iconsax.eye_slash,
+                controller.isPasswordVisible.value
+                    ? Iconsax.eye
+                    : Iconsax.eye_slash,
                 color: AppColors.textMuted,
                 size: 18.sp,
               ),
@@ -1002,7 +1068,11 @@ class SellerGateView extends GetView<SellerGateController> {
             controller: controller.confirmPasswordController,
             obscureText: !controller.isPasswordVisible.value,
             isRequired: true,
-            prefixIcon: Icon(Iconsax.lock, color: AppColors.textMuted, size: 20.sp),
+            prefixIcon: Icon(
+              Iconsax.lock,
+              color: AppColors.textMuted,
+              size: 20.sp,
+            ),
           ),
         ),
         SizedBox(height: 16.h),
@@ -1061,7 +1131,11 @@ class SellerGateView extends GetView<SellerGateController> {
                 ],
               ),
             ),
-            Icon(Iconsax.arrow_right_3, size: 16.sp, color: AppColors.textMuted),
+            Icon(
+              Iconsax.arrow_right_3,
+              size: 16.sp,
+              color: AppColors.textMuted,
+            ),
           ],
         ),
       ),
@@ -1152,7 +1226,11 @@ class SellerGateView extends GetView<SellerGateController> {
                       Row(
                         children: List.generate(
                           5,
-                          (index) => Icon(Icons.star_rounded, color: AppColors.accent, size: 16.sp),
+                          (index) => Icon(
+                            Icons.star_rounded,
+                            color: AppColors.accent,
+                            size: 16.sp,
+                          ),
                         ),
                       ),
                       SizedBox(height: 8.h),
@@ -1244,6 +1322,203 @@ class SellerGateView extends GetView<SellerGateController> {
       ),
     );
   }
+
+  void _showForgotPasswordSheet(BuildContext context) {
+    controller.forgotPhoneController.text =
+        controller.phoneController.text.isNotEmpty
+        ? controller.phoneController.text
+        : (controller.loginAccountController.text.contains('@')
+              ? ''
+              : controller.loginAccountController.text);
+    controller.isForgotOtpSent.value = false;
+    controller.forgotOtpController.clear();
+    controller.forgotNewPasswordController.clear();
+    controller.forgotConfirmPasswordController.clear();
+
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 24.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
+        child: SingleChildScrollView(
+          child: Obx(
+            () => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40.w,
+                    height: 4.h,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8.r),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Icon(
+                        Iconsax.key,
+                        color: AppColors.primary,
+                        size: 22.sp,
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Reset Password',
+                            style: GoogleFonts.inter(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            controller.isForgotOtpSent.value
+                                ? 'Enter the OTP and your new password'
+                                : 'Enter your phone number to receive reset OTP',
+                            style: GoogleFonts.inter(
+                              fontSize: 12.sp,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 18.h),
+                if (!controller.isForgotOtpSent.value) ...[
+                  AppTextField(
+                    label: 'Registered Phone Number',
+                    hint: '01XXXXXXXXX',
+                    controller: controller.forgotPhoneController,
+                    keyboardType: TextInputType.phone,
+                    isRequired: true,
+                    prefixIcon: Icon(
+                      Iconsax.call,
+                      color: AppColors.primary,
+                      size: 20.sp,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  AppButton(
+                    text: 'Send Verification Code',
+                    isLoading: controller.isForgotLoading.value,
+                    icon: const Icon(Iconsax.send_1, color: Colors.white),
+                    onPressed: controller.requestForgotOtp,
+                  ),
+                ] else ...[
+                  AppTextField(
+                    label: '6-Digit SMS Code',
+                    hint: '123456',
+                    controller: controller.forgotOtpController,
+                    keyboardType: TextInputType.number,
+                    isRequired: true,
+                    prefixIcon: Icon(
+                      Iconsax.sms,
+                      color: AppColors.primary,
+                      size: 20.sp,
+                    ),
+                    suffixIcon: Obx(
+                      () => controller.forgotCountdown.value > 0
+                          ? Padding(
+                              padding: EdgeInsets.all(12.r),
+                              child: Text(
+                                '${controller.forgotCountdown.value}s',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            )
+                          : TextButton(
+                              onPressed: controller.requestForgotOtp,
+                              child: Text(
+                                'Resend',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Obx(
+                    () => AppTextField(
+                      label: 'New Password (8-128 chars)',
+                      hint: '••••••••',
+                      controller: controller.forgotNewPasswordController,
+                      obscureText: !controller.isForgotNewPasswordVisible.value,
+                      isRequired: true,
+                      prefixIcon: Icon(
+                        Iconsax.lock,
+                        color: AppColors.textMuted,
+                        size: 20.sp,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          controller.isForgotNewPasswordVisible.value
+                              ? Iconsax.eye
+                              : Iconsax.eye_slash,
+                          color: AppColors.textMuted,
+                          size: 18.sp,
+                        ),
+                        onPressed: () {
+                          controller.isForgotNewPasswordVisible.value =
+                              !controller.isForgotNewPasswordVisible.value;
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Obx(
+                    () => AppTextField(
+                      label: 'Confirm New Password',
+                      hint: '••••••••',
+                      controller: controller.forgotConfirmPasswordController,
+                      obscureText: !controller.isForgotNewPasswordVisible.value,
+                      isRequired: true,
+                      prefixIcon: Icon(
+                        Iconsax.lock_1,
+                        color: AppColors.textMuted,
+                        size: 20.sp,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  AppButton(
+                    text: 'Reset Password & Log In',
+                    isLoading: controller.isForgotLoading.value,
+                    icon: const Icon(Iconsax.tick_circle, color: Colors.white),
+                    onPressed: controller.submitResetPassword,
+                  ),
+                ],
+                SizedBox(height: 12.h),
+              ],
+            ),
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
 }
 
 /// A smooth, continuous horizontal auto-scrolling Marquee widget
@@ -1269,10 +1544,7 @@ class AutoMarqueeWidget extends GetView<SellerGateController> {
         mainAxisSize: MainAxisSize.min,
         children: [
           for (int i = 0; i < 4; i++) ...[
-            for (final child in children) ...[
-              child,
-              SizedBox(width: spacing),
-            ],
+            for (final child in children) ...[child, SizedBox(width: spacing)],
           ],
         ],
       ),
