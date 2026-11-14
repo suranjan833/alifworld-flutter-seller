@@ -1097,7 +1097,7 @@ class HomeView extends GetView<HomeController> {
             children: [
               Expanded(
                 child: _buildActionTile(
-                  title: 'Order Tracking',
+                  title: 'Orders',
                   subtitle: 'Manage & ship',
                   icon: Iconsax.truck_fast,
                   color: const Color(0xFF3B82F6),
@@ -1107,7 +1107,7 @@ class HomeView extends GetView<HomeController> {
               SizedBox(width: 10.w),
               Expanded(
                 child: _buildActionTile(
-                  title: 'Product Catalog',
+                  title: 'Products',
                   subtitle: 'Stock & pricing',
                   icon: Iconsax.box_add,
                   color: const Color(0xFF10B981),
@@ -1121,8 +1121,8 @@ class HomeView extends GetView<HomeController> {
             children: [
               Expanded(
                 child: _buildActionTile(
-                  title: 'Wallet & Payout',
-                  subtitle: 'Balance & transfers',
+                  title: 'Wallets',
+                  subtitle: 'Balance & payout',
                   icon: Iconsax.card_pos,
                   color: const Color(0xFF8B5CF6),
                   onTap: () => controller.changeNavIndex(3),
@@ -1131,8 +1131,8 @@ class HomeView extends GetView<HomeController> {
               SizedBox(width: 10.w),
               Expanded(
                 child: _buildActionTile(
-                  title: 'Coupons & Vouchers',
-                  subtitle: 'Promotional rules',
+                  title: 'Coupons',
+                  subtitle: 'Vouchers & deals',
                   icon: Iconsax.ticket_discount,
                   color: const Color(0xFFEA580C),
                   onTap: () => Get.toNamed(Routes.COUPONS),
@@ -1156,7 +1156,7 @@ class HomeView extends GetView<HomeController> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12.r),
       child: Container(
-        padding: EdgeInsets.all(12.w),
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
@@ -1172,36 +1172,43 @@ class HomeView extends GetView<HomeController> {
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(8.w),
+              padding: EdgeInsets.all(7.w),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(icon, color: color, size: 18.sp),
             ),
-            SizedBox(width: 10.w),
+            SizedBox(width: 8.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 12.5.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
                   SizedBox(height: 1.h),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 10.5.sp,
-                      color: AppColors.textMuted,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      subtitle,
+                      maxLines: 1,
+                      style: GoogleFonts.inter(
+                        fontSize: 10.sp,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ),
                 ],
