@@ -187,7 +187,7 @@ class SellerGateView extends GetView<SellerGateController> {
                     Icon(Iconsax.verify5, size: 13.sp, color: Colors.white),
                     SizedBox(width: 4.w),
                     Text(
-                      'OFFICIAL MERCHANT GATEWAY',
+                      'SELLER PORTAL',
                       style: GoogleFonts.inter(
                         fontSize: 9.5.sp,
                         fontWeight: FontWeight.w800,
@@ -212,7 +212,7 @@ class SellerGateView extends GetView<SellerGateController> {
           ),
           SizedBox(height: 6.h),
           Text(
-            'Lowest commissions • Next-day automated payouts • 64 districts courier pickup.',
+            'Manage orders • Automated payouts • Nationwide courier pickup.',
             style: GoogleFonts.inter(
               fontSize: 12.sp,
               color: Colors.white.withValues(alpha: 0.9),
@@ -228,13 +228,13 @@ class SellerGateView extends GetView<SellerGateController> {
             children: [
               _buildHeroMiniBadge(
                 Iconsax.empty_wallet_tick,
-                '0% First 30 Days',
+                'Fast Verification',
               ),
               _buildHeroMiniBadge(Iconsax.truck_fast, '64 Districts Pickup'),
               _buildHeroMiniBadge(Iconsax.card_tick, 'Automated Bank Payout'),
-              _buildHeroMiniBadge(Iconsax.headphone, '24/7 Dedicated Support'),
-              _buildHeroMiniBadge(Iconsax.tag_2, 'Zero Catalog Listing Fee'),
-              _buildHeroMiniBadge(Iconsax.flash_1, 'Free Promotional Boost'),
+              _buildHeroMiniBadge(Iconsax.headphone, 'Dedicated Support'),
+              _buildHeroMiniBadge(Iconsax.tag_2, 'Catalog Management'),
+              _buildHeroMiniBadge(Iconsax.flash_1, 'Marketing Tools'),
             ],
           ),
         ],
@@ -913,7 +913,7 @@ class SellerGateView extends GetView<SellerGateController> {
         ),
         SizedBox(height: 4.h),
         Text(
-          'Your statements, order alerts, and official payouts will be sent here.',
+          'Your statements, order alerts, and payouts will be sent here.',
           style: GoogleFonts.inter(
             fontSize: 11.5.sp,
             color: AppColors.textSecondary,
@@ -1106,7 +1106,7 @@ class SellerGateView extends GetView<SellerGateController> {
                 color: AppColors.primaryLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Iconsax.award, color: AppColors.primary, size: 18.sp),
+              child: Icon(Iconsax.shop, color: AppColors.primary, size: 18.sp),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -1114,7 +1114,7 @@ class SellerGateView extends GetView<SellerGateController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Why 50,000+ merchants sell on Alif',
+                    'Seller guidelines & policies',
                     style: GoogleFonts.inter(
                       fontSize: 12.5.sp,
                       fontWeight: FontWeight.w700,
@@ -1122,7 +1122,7 @@ class SellerGateView extends GetView<SellerGateController> {
                     ),
                   ),
                   Text(
-                    'Tap to view commission rates, payout cycles & seller reviews',
+                    'Tap to view commission structure, payout cycles and rules',
                     style: GoogleFonts.inter(
                       fontSize: 11.sp,
                       color: AppColors.textSecondary,

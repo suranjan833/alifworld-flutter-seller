@@ -26,7 +26,7 @@ class WalletsPageController extends GetxController {
     'seller_main': 'Primary withdrawable balance for payouts',
     'seller_total_sales': 'Total gross sales from customer orders',
     'seller_club_bonus': 'Special club tier performance earnings',
-    'seller_star_bonus': 'Top star rating rewards & bonuses',
+    'seller_star_bonus': 'Rating rewards & performance bonuses',
     'seller_total_point': 'Accrued loyalty and reward points',
     'seller_good_luck': 'Promotional campaign bonus funds',
     'seller_charity': 'Charity fund allocations (view-only)',

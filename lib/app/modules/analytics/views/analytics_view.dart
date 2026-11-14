@@ -482,7 +482,7 @@ class AnalyticsView extends GetView<AnalyticsController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Top products',
+            'Product insights',
             style: GoogleFonts.inter(
               fontSize: 14.5.sp,
               fontWeight: FontWeight.w700,
@@ -491,7 +491,7 @@ class AnalyticsView extends GetView<AnalyticsController> {
           ),
           SizedBox(height: 2.h),
           Text(
-            'Your best sellers by revenue',
+            'Items sorted by revenue',
             style: GoogleFonts.inter(
               fontSize: 11.5.sp,
               color: AppColors.textMuted,

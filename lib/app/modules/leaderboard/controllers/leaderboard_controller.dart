@@ -45,8 +45,8 @@ class LeaderboardController extends GetxController {
         );
       } else {
         leaderboardData.value = LeaderboardDataModel(
-          myRank: 1,
-          totalSellers: 1,
+          myRank: 0,
+          totalSellers: 0,
           myRevenue: 0.0,
           myOrders: 0,
           period: p,

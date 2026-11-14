@@ -13,15 +13,15 @@ class OnboardingView extends GetView<OnboardingController> {
   static const List<Map<String, dynamic>> slides = [
     {
       'tag': '01 • MARKET EXPANSION',
-      'title': 'Sell to Millions Across\nBangladesh',
+      'title': 'Reach Verified Buyers Across\nBangladesh',
       'desc':
-          'Showcase your store to verified buyers in 64 districts. Enjoy 0% commission for the first 30 days and instant product indexing.',
+          'Showcase your store to customers in 64 districts. Enjoy streamlined onboarding and automated catalog management.',
       'mainIcon': Iconsax.shop,
       'accIcon1': Iconsax.global,
       'accIcon2': Iconsax.trend_up,
       'features': [
-        {'icon': Iconsax.verify, 'text': 'Fast 24h store verification & live storefront'},
-        {'icon': Iconsax.tag_2, 'text': '0% starter commission with promotional boost'},
+        {'icon': Iconsax.verify, 'text': 'Fast store verification & live storefront'},
+        {'icon': Iconsax.tag_2, 'text': 'Transparent commission & promotional tools'},
       ],
       'gradient': [Color(0xFFFF630F), Color(0xFFFF8E4F)],
       'badgeColor': Color(0xFFFFF2EB),

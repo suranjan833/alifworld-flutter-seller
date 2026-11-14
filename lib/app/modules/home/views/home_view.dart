@@ -428,8 +428,8 @@ class HomeView extends GetView<HomeController> {
         final hasSales = stats != null && stats.hasSales && products.isNotEmpty;
 
         return _buildSectionCardWrapper(
-          title: 'Top products',
-          subtitle: 'Best-selling items by revenue (${controller.selectedRange.value.toUpperCase()})',
+          title: 'Product performance',
+          subtitle: 'Items sorted by revenue (${controller.selectedRange.value.toUpperCase()})',
           child: !hasSales
               ? _buildEmptyState(
                   icon: Iconsax.shop,

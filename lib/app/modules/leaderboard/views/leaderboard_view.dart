@@ -111,7 +111,7 @@ class LeaderboardView extends GetView<LeaderboardController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Seller leaderboard',
+          'Seller community',
           style: GoogleFonts.inter(
             fontSize: 22.sp,
             fontWeight: FontWeight.w800,
@@ -120,7 +120,7 @@ class LeaderboardView extends GetView<LeaderboardController> {
         ),
         SizedBox(height: 2.h),
         Text(
-          'Top shops ranked by sales revenue',
+          'Shop performance by sales revenue',
           style: GoogleFonts.inter(
             fontSize: 12.sp,
             color: const Color(0xFF64748B),
@@ -236,10 +236,10 @@ class LeaderboardView extends GetView<LeaderboardController> {
         children: [
           Row(
             children: [
-              Icon(Iconsax.cup, size: 16.sp, color: const Color(0xFFD97706)),
+              Icon(Iconsax.trend_up, size: 16.sp, color: const Color(0xFFD97706)),
               SizedBox(width: 6.w),
               Text(
-                'My rank',
+                'My position',
                 style: GoogleFonts.inter(
                   fontSize: 12.5.sp,
                   fontWeight: FontWeight.w600,
@@ -254,7 +254,7 @@ class LeaderboardView extends GetView<LeaderboardController> {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '#${data.myRank}',
+                data.myRank > 0 ? '#${data.myRank}' : '-',
                 style: GoogleFonts.inter(
                   fontSize: 24.sp,
                   fontWeight: FontWeight.w800,
@@ -383,7 +383,7 @@ class LeaderboardView extends GetView<LeaderboardController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Top sellers',
+            'Community sellers',
             style: GoogleFonts.inter(
               fontSize: 15.sp,
               fontWeight: FontWeight.w700,
@@ -392,7 +392,7 @@ class LeaderboardView extends GetView<LeaderboardController> {
           ),
           SizedBox(height: 2.h),
           Text(
-            'Ranked by sales revenue in the selected period',
+            'Performance by sales revenue in the selected period',
             style: GoogleFonts.inter(
               fontSize: 12.sp,
               color: const Color(0xFF64748B),
@@ -408,7 +408,7 @@ class LeaderboardView extends GetView<LeaderboardController> {
                 SizedBox(
                   width: 50.w,
                   child: Text(
-                    'Rank',
+                    'Pos',
                     style: GoogleFonts.inter(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
